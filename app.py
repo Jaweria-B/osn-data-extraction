@@ -48,6 +48,10 @@ if uploaded_file is not None:
     st.success("File uploaded successfully! Preview below:")
     st.dataframe(df.head(), use_container_width=True)
 
+    df = df.dropna(subset=["Hardware No"])
+    df["Hardware No"] = df["Hardware No"].astype(int)  # Ensure numeric data
+
+
     # Initialize driver and navigate to login page
     if st.button("🚀 Initialize and Login"):
         driver = initialize_driver()
@@ -86,7 +90,7 @@ if uploaded_file is not None:
                     time.sleep(2)  # Wait for results to load
 
                     # Extract Customer No
-                    customer_no_element = WebDriverWait(driver, 10).until(
+                    customer_no_element = WebDriverWait(driver, 30).until(
                         EC.presence_of_element_located((By.XPATH, "//span/a[contains(@href, 'CustomerLandingNew.aspx')]"))
                     )
                     customer_no = customer_no_element.text.strip()
