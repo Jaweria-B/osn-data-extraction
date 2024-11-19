@@ -90,43 +90,62 @@ if uploaded_file is not None:
                     time.sleep(2)  # Wait for results to load
 
                     # Extract Customer No
-                    customer_no_element = WebDriverWait(driver, 30).until(
-                        EC.presence_of_element_located((By.XPATH, "//span/a[contains(@href, 'CustomerLandingNew.aspx')]"))
-                    )
-                    customer_no = customer_no_element.text.strip()
+                    try:
+                        customer_no_element = WebDriverWait(driver, 60).until(
+                            EC.presence_of_element_located((By.XPATH, "//span/a[contains(@href, 'CustomerLandingNew.aspx')]"))
+                        )
+                        customer_no = customer_no_element.text.strip()
+                    except TimeoutException:
+                        st.error(f"⚠️ Timeout while waiting for Customer No for Hardware No: {hardware_no}")
+                        continue
 
                     # Extract Customer Name
-                    customer_name_element = driver.find_element(By.ID, "MainContent_CustPersonalInfo_lblName")
-                    customer_name = customer_name_element.text.strip()
+                    try:
+                        customer_name_element = WebDriverWait(driver, 60).until(
+                            EC.presence_of_element_located((By.ID, "MainContent_CustPersonalInfo_lblName"))
+                        )
+                        customer_name = customer_name_element.text.strip()
+                    except TimeoutException:
+                        st.error(f"⚠️ Timeout while waiting for Customer Name for Hardware No: {hardware_no}")
+                        continue
 
                     # Extract Mobile
-                    mobile_element = driver.find_element(By.ID, "MainContent_CustPersonalInfo_hplMobile")
-                    mobile = mobile_element.text.strip()
+                    try:
+                        mobile_element = WebDriverWait(driver, 60).until(
+                            EC.presence_of_element_located((By.ID, "MainContent_CustPersonalInfo_hplMobile"))
+                        )
+                        mobile = mobile_element.text.strip()
+                    except TimeoutException:
+                        st.error(f"⚠️ Timeout while waiting for Mobile for Hardware No: {hardware_no}")
+                        continue
 
-                    # Add extracted data to DataFrame
-                    df.at[index, "Customer No"] = customer_no
-                    df.at[index, "Name"] = customer_name
-                    df.at[index, "Mobile"] = mobile
-                    
-                    # Find the table and extract data
-                    table = driver.find_element(By.ID, "JColResizerGridProductList")
-                    tbody = table.find_element(By.TAG_NAME, "tbody")
-                    rows = tbody.find_elements(By.TAG_NAME, "tr")
-                    
-                    product_value = None
-                    charge_until_date = None
-                    contract_end_date = None
+                    # Extract Table Data
+                    try:
+                        table = WebDriverWait(driver, 60).until(
+                            EC.presence_of_element_located((By.ID, "JColResizerGridProductList"))
+                        )
+                        tbody = table.find_element(By.TAG_NAME, "tbody")
+                        rows = tbody.find_elements(By.TAG_NAME, "tr")
 
-                    # Iterate over rows to find the one with "OSN SW Packages"
-                    for row in rows:
-                        cells = row.find_elements(By.TAG_NAME, "td")
-                        if len(cells) >= 18:  # Ensure row has enough columns
-                            product_category = cells[16].text.strip()  # Adjust index for Product Category
-                            if product_category == "OSN SW Packages":
-                                product_value = cells[1].text.strip()  # Adjust index for Product
-                                charge_until_date = cells[8].text.strip()  # Adjust index for Charge Until Date
-                                contract_end_date = cells[10].text.strip()  # Adjust index for Contract End Date
-                                break
+                        product_value = None
+                        charge_until_date = None
+                        contract_end_date = None
+
+                        # Iterate over rows to find the one with "OSN SW Packages"
+                        for row in rows:
+                            cells = row.find_elements(By.TAG_NAME, "td")
+                            if len(cells) >= 18:  # Ensure row has enough columns
+                                product_category = cells[16].text.strip()  # Adjust index for Product Category
+                                if product_category == "OSN SW Packages":
+                                    product_value = cells[1].text.strip()  # Adjust index for Product
+                                    charge_until_date = cells[8].text.strip()  # Adjust index for Charge Until Date
+                                    contract_end_date = cells[10].text.strip()  # Adjust index for Contract End Date
+                                    break
+
+                    except TimeoutException:
+                        st.error(f"⚠️ Timeout while waiting for table data for Hardware No: {hardware_no}")
+                        continue
+
 
                     if product_value and charge_until_date and contract_end_date:
                         # Update Excel DataFrame
