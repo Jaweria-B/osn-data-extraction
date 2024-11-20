@@ -12,6 +12,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.core.os_manager import ChromeType
 import time
 
 # Set Streamlit page configuration
@@ -38,9 +39,10 @@ def initialize_driver():
     options = Options()
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--headless")  # Enable headless mode for deployment
+    options.add_argument("--headless")  # Use headless mode for deployment
     options.add_argument("--disable-gpu")
-    service = Service(ChromeDriverManager().install())
+    
+    service = Service(ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install())
     driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(10)
     return driver
