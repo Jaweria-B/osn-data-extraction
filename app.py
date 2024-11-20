@@ -1,11 +1,13 @@
 import streamlit as st
 import atexit
+from selenium import webdriver
 from openpyxl import load_workbook
 import pandas as pd
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
@@ -20,16 +22,37 @@ st.set_page_config(
 )
 
 # Function to initialize Chrome driver
+# def initialize_driver():
+#     options = uc.ChromeOptions()
+#     options.add_argument("--no-sandbox")
+#     options.add_argument("--disable-dev-shm-usage")
+#     options.add_argument("--start-maximized")
+#     service = Service(ChromeDriverManager().install())
+#     driver = uc.Chrome(service=service, options=options)
+#     driver.implicitly_wait(10)
+#     atexit.register(driver.quit)  # Ensure driver quits on exit
+#     return driver
+
+# Initialize Chrome WebDriver
 def initialize_driver():
-    options = uc.ChromeOptions()
+    options = Options()
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--start-maximized")
+    options.add_argument("--headless")  # Enable headless mode for deployment
+    options.add_argument("--disable-gpu")
     service = Service(ChromeDriverManager().install())
-    driver = uc.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=service, options=options)
     driver.implicitly_wait(10)
-    atexit.register(driver.quit)  # Ensure driver quits on exit
     return driver
+
+# Safe element finder
+def safe_find_element(driver, by, value, timeout=30):
+    try:
+        return WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((by, value))
+        )
+    except TimeoutException:
+        return None
 
 # Streamlit UI setup
 st.markdown("<h1 style='text-align: center; color: #4CAF50;'>📊 OSN Customer Data Extraction Tool</h1>", unsafe_allow_html=True)
